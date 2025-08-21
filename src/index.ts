@@ -45,11 +45,12 @@ export async function AppscriptVitePlugin({
                 if (Object.keys(toReplace).length > 0) {
                     // replace functions
                     for (const entry in toReplace) {
+                        // try with functions
                         const regx = RegExp(`function\\s+${escapeRegExp(entry)}\\(`);
-                        code = code.replace(
-                            regx,
-                            `// oxlint-disable-next-line no-unused-vars\nfunction ${toReplace[entry]}(`
-                        );
+                        code = code.replace(regx, `function ${toReplace[entry]}(`);
+                        // try with arrow functions
+                        const refxCst = RegExp(`const\\s+${escapeRegExp(entry)}\\s+=`);
+                        code = code.replace(refxCst, `const ${toReplace[entry]} =`);
                     }
 
                     // create connection with old name
