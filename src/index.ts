@@ -9,6 +9,11 @@ export type AppscriptVitePluginType = {
     newFileName?: string;
 };
 
+type FNInfo = {
+    comment: string;
+    params: string;
+};
+
 export async function AppscriptVitePlugin({
     replaceFile = true,
     libName = 'APP',
@@ -48,7 +53,7 @@ export async function AppscriptVitePlugin({
                     }
                 }
 
-                // replace only if there is something to replace
+                // replace minified name if necessary with long name
                 if (Object.keys(toReplace).length > 0) {
                     // replace functions
                     for (const entry in toReplace) {
@@ -67,10 +72,24 @@ export async function AppscriptVitePlugin({
                     }
                 }
 
+                // load functions info
+                const fnInfos: Record<string, FNInfo> = {};
+                for (const fnName of fnNames) {
+                    // extract comments and params from function
+                    const refxCst = RegExp(
+                        `(\\/\\*\\*(?:(?!\\*\\/)[\\S\\s])+\\*\\/)?\\s*(?:function\\s*${fnName}|(?:const|let)\\s*${fnName}\\s*=)\\s*\\(([^)]+)?\\)`
+                    );
+                    const matcher = code.match(refxCst);
+                    if (matcher) {
+                        fnInfos[fnName] = { comment: matcher[1], params: matcher[2] };
+                    }
+                }
+
                 // isolate code into a LIB Section
                 code = `/**\n* @ignore\n* @hidden\n* @private\n*/\nconst ${libName} = (() => {\n\n${code}\n\nreturn {\n  ${fnNames.join(',\n  ')}\n}\n\n})();\n\n`;
                 for (const fnName of fnNames) {
-                    code += `const ${fnName} = ${libName}.${fnName};\n`;
+                    const fnInfo = fnInfos[fnName];
+                    code += `${fnInfo.comment}\nfunction ${fnName}(${fnInfo.params}) { return ${libName}.${fnName}(${fnInfo.params}); };\n`;
                 }
 
                 // add banner on top

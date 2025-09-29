@@ -1,7 +1,7 @@
 {
     "name": "@kele23/appscript-vite-plugin",
     "description": "Appscript vite plugin",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "author": "Michele Scala (scala233@gmail.com)",
     "repository": {
         "type": "git",
