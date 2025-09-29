@@ -4,11 +4,15 @@ const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 export type AppscriptVitePluginType = {
     replaceFile: boolean;
+    libName?: string;
+    banner?: string;
     newFileName?: string;
 };
 
 export async function AppscriptVitePlugin({
     replaceFile = true,
+    libName = 'APP',
+    banner,
     newFileName
 }: AppscriptVitePluginType): Promise<Plugin> {
     return {
@@ -29,19 +33,22 @@ export async function AppscriptVitePlugin({
 
                 // get function names
                 const toReplace: Record<string, string> = {};
+                const fnNames: string[] = [];
                 const split = match.split(',');
                 for (const spl of split) {
-                    const t = /(.*)\s+as\s+(.*)/.exec(spl.trim());
-                    if (!t || t.length < 3) continue;
-
-                    const fn = t[1];
-                    const realName = t[2];
-
-                    // add to replace
-                    toReplace[fn] = realName;
+                    const name = spl.trim();
+                    const t = /(.*)\s+as\s+(.*)/.exec(name);
+                    if (t) {
+                        const fn = t[1];
+                        const realName = t[2];
+                        toReplace[fn] = realName;
+                        fnNames.push(realName);
+                    } else {
+                        fnNames.push(name);
+                    }
                 }
 
-                // replace only if there is something
+                // replace only if there is something to replace
                 if (Object.keys(toReplace).length > 0) {
                     // replace functions
                     for (const entry in toReplace) {
@@ -58,6 +65,17 @@ export async function AppscriptVitePlugin({
                     for (const entry in toReplace) {
                         code += `\nconst ${entry} = ${toReplace[entry]};`;
                     }
+                }
+
+                // isolate code into a LIB Section
+                code = `/**\n* @ignore\n* @hidden\n* @private\n*/\nconst ${libName} = (() => {\n\n${code}\n\nreturn {\n  ${fnNames.join(',\n  ')}\n}\n\n})();\n\n`;
+                for (const fnName of fnNames) {
+                    code += `const ${fnName} = ${libName}.${fnName};\n`;
+                }
+
+                // add banner on top
+                if (banner) {
+                    code = banner + '\n\n' + code;
                 }
 
                 if (replaceFile) await this.fs.writeFile(`${options.dir}/${fileName}`, code);

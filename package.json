@@ -1,7 +1,7 @@
 {
     "name": "@kele23/appscript-vite-plugin",
     "description": "Appscript vite plugin",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "author": "Michele Scala (scala233@gmail.com)",
     "repository": {
         "type": "git",
@@ -36,7 +36,6 @@
     "peerDependencies": {
         "vite": "^6.0.0 || ^7.0.0"
     },
-    "dependencies": {},
     "devDependencies": {
         "@types/node": "^24.2.1",
         "oxlint": "^1.11.0",
