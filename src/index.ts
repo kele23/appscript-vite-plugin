@@ -89,7 +89,7 @@ export async function AppscriptVitePlugin({
                 code = `/**\n* @ignore\n* @hidden\n* @private\n*/\nconst ${libName} = (() => {\n\n${code}\n\nreturn {\n  ${fnNames.join(',\n  ')}\n}\n\n})();\n\n`;
                 for (const fnName of fnNames) {
                     const fnInfo = fnInfos[fnName];
-                    code += `${fnInfo.comment}\nfunction ${fnName}(${fnInfo.params}) { return ${libName}.${fnName}(${fnInfo.params}); };\n`;
+                    code += `${fnInfo.comment}\nfunction ${fnName}(${fnInfo.params ?? ''}) { return ${libName}.${fnName}(${fnInfo.params ?? ''}); };\n`;
                 }
 
                 // add banner on top
